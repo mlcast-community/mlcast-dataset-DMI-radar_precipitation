@@ -7,6 +7,7 @@ import numpy as np
 import cartopy.crs as ccrs
 from pyproj import CRS
 import dask.array as da
+from .config import SpatialRes
 
 def get_coords():
     proj_str = '+proj=stere +ellps=WGS84 +lat_0=56 +lon_0=10.5666 +lat_ts=56'
@@ -18,8 +19,14 @@ def get_coords():
     for n_row in range(4):
         lat,lon = coordArr[n_row,:]
         XY_corners[n_row,:] = proj.transform_point(lon, lat, src_crs)
-    Xs = np.linspace(XY_corners[:,0].min(),XY_corners[:,0].max(),1984)
-    Ys = np.linspace(XY_corners[:,1].min(),XY_corners[:,1].max(),1728)
+    if SpatialRes== 500:
+        Xpixels = 1984
+        Ypixels = 1728
+    elif SpatialRes == 1000:
+        Xpixels = 992
+        Ypixels = 864
+    Xs = np.linspace(XY_corners[:,0].min(),XY_corners[:,0].max(),Xpixels)
+    Ys = np.linspace(XY_corners[:,1].min(),XY_corners[:,1].max(),Ypixels)
     X,Y = np.meshgrid(Xs,Ys)
     lonlat = src_crs.transform_points(proj, X, Y)
     lon = lonlat[..., 0]
