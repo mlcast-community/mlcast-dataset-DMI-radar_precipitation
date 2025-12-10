@@ -8,6 +8,5 @@ init_year = '2016'
 final_year = '2024'
 is_new = 0
 
-SpatialRes500 = {Xpixels: 1984,Ypixels:1728}
-SpatialRes1000 = {Xpixels: 992,Ypixels:864}
+SpatialRes = 500
 
