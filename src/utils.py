@@ -7,7 +7,7 @@ import numpy as np
 import cartopy.crs as ccrs
 from pyproj import CRS
 import dask.array as da
-from .config import SpatialRes
+from config import *
 
 def get_coords():
     proj_str = '+proj=stere +ellps=WGS84 +lat_0=56 +lon_0=10.5666 +lat_ts=56'
@@ -19,12 +19,6 @@ def get_coords():
     for n_row in range(4):
         lat,lon = coordArr[n_row,:]
         XY_corners[n_row,:] = proj.transform_point(lon, lat, src_crs)
-    if SpatialRes== 500:
-        Xpixels = 1984
-        Ypixels = 1728
-    elif SpatialRes == 1000:
-        Xpixels = 992
-        Ypixels = 864
     Xs = np.linspace(XY_corners[:,0].min(),XY_corners[:,0].max(),Xpixels)
     Ys = np.linspace(XY_corners[:,1].min(),XY_corners[:,1].max(),Ypixels)
     X,Y = np.meshgrid(Xs,Ys)
@@ -58,7 +52,7 @@ def extract_tars(filename,X,Y,lat,lon,crs_attrs):
         MM = str(start.minute)
         if int(MM)<10:
             MM = '0' + MM
-        memberN = f'data/radman/archive/prd/composite/max/{yy}/{yy}-{mm}-{dd}/dk.com.{yymmdd}{HH}{MM}.500_max.h5'
+        memberN = f'data/radman/archive/prd/composite/max/{yy}/{yy}-{mm}-{dd}/dk.com.{yymmdd}{HH}{MM}.{SpatialRes}_max.h5'
         with tarfile.open(filename,"r") as tar:
             ls_names = np.array(tar.getnames())
             dateTime = get_time(f'{yymmdd}{HH}{MM}')
@@ -110,12 +104,12 @@ def AddCoordsAttrs(ds,X,Y,lat,lon,crs_attrs):
     ds['y'].attrs={'units':'m'}
     ds.coords['x'] = X
     ds['x'].attrs={'units':'m'}
-    lat = da.from_array(lat,chunks=(1728,1984))
-    lon = da.from_array(lon,chunks=(1728,1984))#864,992
+    lat = da.from_array(lat,chunks=(Ypixels,Xpixels))
+    lon = da.from_array(lon,chunks=(Ypixels,Xpixels))#864,992
     ds = ds.assign_coords(lon=(('y','x'),lon),lat=(('y','x'),lat))
     ds['lat'].attrs = {'long_name': 'Latitude', 'standard_name': 'latitude', 'units': 'degrees_north'}
     ds['lon'].attrs = {'long_name': 'Longitude', 'standard_name': 'longitude', 'units': 'degrees_east'}
-    ds = ds.chunk({"time":1,"y":1728,"x":1984})
+    ds = ds.chunk({"time":1,"y":Ypixels,"x":Xpixels})
     ds['crs'] = xr.DataArray(attrs=crs_attrs)
     #ds['time'].attrs = {'long_name': 'Time','standard_name':'time'}
     ds['dbz'].attrs = {'grid_mapping': 'crs','long_name':'10 min radar reflectivity','standard_name': 'equivalent_reflectivity_factor', 'units':'dBZ'}
@@ -157,7 +151,7 @@ class create_xrdata():
             return self.ds
 
 def empty_timestep(dateTime):
-    data = np.ones((1728,1984))*np.nan
+    data = np.ones((Ypixels,Xpixels))*np.nan
     data = da.from_array(data,chunks=-1)
     ds = xr.Dataset(
             data_vars={'dbz':(("y","x"), data)})
