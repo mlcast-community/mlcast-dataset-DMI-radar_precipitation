@@ -8,5 +8,6 @@ init_year = '2016'
 final_year = '2024'
 is_new = 0
 
-SpatialRes = 500
-
+SpatialRes = 500 # 1000
+Xpixels = 1984 # 992
+Ypixels = 1728 # 864
