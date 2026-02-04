@@ -1,29 +1,36 @@
+import sys
 import os
 import numpy as np
 import xarray as xr
 import zarr
 from config import *
-from utils import extract_tars,create_empty_data,get_coords
+from utils_new import extract_tars,create_empty_data,get_coords
 import logging
-from numcodecs import Zstd
+from numcodecs import Zstd #Blosc
 import calendar
 from itertools import chain
 import datetime
 
 def logging_extract_tars(full_path,X,Y,lat,lon,crs_attrs,it_exist):
-  if it_exist == 1:
-    try:
-        return extract_tars(full_path,X,Y,lat,lon,crs_attrs)
-    except Exception as e:
-        logging.exception(e)
-  else:
-    try:
-        return create_empty_data(full_path,X,Y,lat,lon,crs_attrs)
-    except Exception as e:
-        logging.exception(e)
-  return None
+    if it_exist == 1:
+        try:
+            return extract_tars(full_path,X,Y,lat,lon,crs_attrs)
+        except Exception as e:
+            logging.exception(e)
+    else:
+        try:
+            return create_empty_data(full_path,X,Y,lat,lon,crs_attrs)
+        except Exception as e:
+            logging.exception(e)
+    return None
+
 def extract_tars_and_store(full_path,X,Y,lat,lon,crs_attrs,encoding,zarr_path,it_exist):
     ds = logging_extract_tars(full_path,X,Y,lat,lon,crs_attrs,it_exist)
+    version = '0.1.0'
+    ds.attrs['mlcast_dataset_version'] = version
+    ds.attrs['mlcast_created_with'] = f'https://github.com/mlcast-community/mlcast-dataset-DMI-radar_precipitation@{version}'
+    now = datetime.datetime.now().isoformat()
+    ds.attrs['mlcast_created_on'] = now
     if not os.path.exists(zarr_path):
         ds.to_zarr(zarr_path,mode='w',encoding = encoding,consolidated=True,zarr_format=2)
     else:
@@ -31,8 +38,7 @@ def extract_tars_and_store(full_path,X,Y,lat,lon,crs_attrs,encoding,zarr_path,it
     with open("back_log.txt","w") as fwa:
         fwa.write(str(full_path))
     return None
-
-  if __name__ == "__main__":
+if __name__ == "__main__":
     X,Y,lat,lon,crs_attrs = get_coords()
     All_ds = []
     encoding = {"dbz": {"compressor":Zstd(level=3)}}
@@ -72,13 +78,14 @@ def extract_tars_and_store(full_path,X,Y,lat,lon,crs_attrs,encoding,zarr_path,it
         u_limit = datetime.date(yr+1,1,1)
         doy = np.unique(doy)
         doy = doy[np.where(np.logical_and(doy>=l_limit,doy<u_limit))]
-        for day in doy:
+        for day in doy:#tarFil in os.listdir(year_path):
             day = day.strftime("composite.%Y%m%d.max.h5.tar")
             full_path = year_path / day
             if os.path.exists(full_path):
-              it_exist = 1
+                it_exist = 1
             else:
-              it_exist = 0
-            out_name = f'DMI_DataSet_{SpatialRes}m_10min.zarr'
+                it_exist = 0
+            out_name = f'DMI_DataSet_{SpatialRes}m_10min_sec.zarr'
             extract_tars_and_store(full_path,X,Y,lat,lon,crs_attrs,encoding,RADAR_ZARR/out_name,it_exist)
+
                 
