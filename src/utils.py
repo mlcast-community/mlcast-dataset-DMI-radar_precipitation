@@ -141,8 +141,9 @@ class create_xrdata():
         try:
             ds = xr.open_dataset(self.tFile,group='dataset1/data1',engine="h5netcdf", chunks = -1,phony_dims='sort')
             ds = ds.rename({'data':'dbz','phony_dim_0':'y','phony_dim_1':'x'})
-            ds['dbz'] = ds['dbz'].where((ds['dbz']!=255) & (ds['dbz']!=0),other=np.nan)
+            ds['dbz'] = ds['dbz'].where((ds['dbz']!=255)),other=np.nan)
             ds['dbz'] = ds['dbz']*self.gain +self.offset
+            ds['dbz'] = ds['dbz'][::-1, :]
             self.ds = ds.expand_dims(time=self.dateTime)
             self.ds['time'].attrs = {'long_name': 'Time','standard_name':'time'}
             self.ds.load()
