@@ -73,7 +73,9 @@ if __name__ == "__main__":
         else:
             doy = [cc.itermonthdates(int(year),m) for m in range(1,13)]
         doy = list(chain.from_iterable(doy))
-
+        if int(year) > int(years[0]):
+            mm = 1
+            dd = 1
         l_limit = datetime.date(yr,mm,dd)
         u_limit = datetime.date(yr+1,1,1)
         doy = np.unique(doy)
@@ -85,7 +87,7 @@ if __name__ == "__main__":
                 it_exist = 1
             else:
                 it_exist = 0
-            out_name = f'DMI_DataSet_{SpatialRes}m_10min_sec.zarr'
+            out_name = f'DMI_DataSet_{SpatialRes}m_10min.zarr'
             extract_tars_and_store(full_path,X,Y,lat,lon,crs_attrs,encoding,RADAR_ZARR/out_name,it_exist)
 
                 
