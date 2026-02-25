@@ -14,4 +14,4 @@ when `cartopy` when using the projection for plotting).
 
 ## [v0.1.1](https://github.com/mlcast-community/mlcast-dataset-DMI-radar_precipitation/releases/tag/v0.1.1)
 
-Second tagged release fixing a bug in the original dataset. 
+Second tagged release fixing a bug in the original dataset that put nan where there were non-observation pixels. 
